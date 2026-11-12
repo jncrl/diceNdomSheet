@@ -1,5 +1,7 @@
 <script lang="ts">
   import { registerSW } from 'virtual:pwa-register';
+  import DataCard from './lib/DataCard.svelte';
+  import { data, loadData, updateAvailable, runSync } from './lib/data.svelte';
 
   type Tab = 'browse' | 'characters' | 'settings';
 
@@ -31,6 +33,8 @@
     onOfflineReady: () => (offlineReady = true),
     onNeedRefresh: () => (updateReady = true)
   });
+
+  void loadData();
 
   $effect(() => {
     const onHash = () => (tab = fromHash());
@@ -81,9 +85,16 @@
     </div>
   {/if}
 
+  {#if updateAvailable() && data.status !== 'syncing'}
+    <div class="banner">
+      <span>New book data is available ({data.version} to {data.remoteVersion}).</span>
+      <button onclick={() => { go('settings'); void runSync(); }}>Update data</button>
+    </div>
+  {/if}
+
   <main>
     {#if tab === 'browse'}
-      <p class="empty">Spells, species, classes and feats will appear here once book data is synced.</p>
+      <p class="empty">Spells, species, classes and feats will appear here once book data is downloaded. Start in Settings.</p>
     {:else if tab === 'characters'}
       <p class="empty">No characters yet.</p>
     {:else}
@@ -108,10 +119,7 @@
           <dd><code>{import.meta.env.BASE_URL}</code></dd>
         </dl>
       </section>
-      <section class="card">
-        <h2>Book data</h2>
-        <p class="muted">Mirror settings and sync arrive in the next milestone.</p>
-      </section>
+      <DataCard />
     {/if}
   </main>
 
@@ -169,7 +177,7 @@
     gap: 1rem;
   }
 
-  .empty, .muted { color: var(--muted); max-width: 34rem; }
+  .empty { color: var(--muted); max-width: 34rem; }
 
   .card {
     background: var(--panel);
