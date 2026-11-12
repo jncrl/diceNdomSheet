@@ -1,0 +1,92 @@
+/*
+ * Design tokens
+ *
+ * Keep visual decisions here rather than in feature logic. Existing component
+ * styles still use the legacy aliases at the bottom of this file; retain them
+ * until those components are migrated to semantic tokens.
+ */
+
+:root {
+  /* Palette primitives: current Tome Sheet dark theme */
+  --palette-ink: #101b1f;
+  --palette-panel: #17262b;
+  --palette-line: #2a3d44;
+  --palette-bone: #e9e4d6;
+  --palette-muted: #8fa3a8;
+  --palette-verdigris: #5fb3a1;
+  --palette-brass: #d9a441;
+  --palette-danger: #e07a6a;
+
+  /* Semantic colours */
+  --color-background: var(--palette-ink);
+  --color-surface: var(--palette-panel);
+  --color-border: var(--palette-line);
+  --color-text: var(--palette-bone);
+  --color-text-muted: var(--palette-muted);
+  --color-accent: var(--palette-verdigris);
+  --color-accent-strong: var(--palette-brass);
+  --color-danger: var(--palette-danger);
+  --color-on-accent: #0b1417;
+
+  /* Typography */
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Iowan Old Style', Palatino, 'Noto Serif', Georgia, serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.15rem;
+  --font-size-xl: 1.6rem;
+  --line-height-body: 1.5;
+  --line-height-heading: 1.2;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+
+  /* Shape, sizing and layout */
+  --radius-sm: 0.4rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-pill: 999px;
+  --control-height: 48px;
+  --control-height-compact: 40px;
+  --navigation-height: 64px;
+  --content-width: 40rem;
+  --content-width-wide: 60rem;
+
+  color-scheme: dark;
+
+  /*
+   * Backwards-compatible aliases. New components should use semantic tokens.
+   * These aliases can be removed only after all existing consumers migrate.
+   */
+  --ink: var(--color-background);
+  --panel: var(--color-surface);
+  --line: var(--color-border);
+  --bone: var(--color-text);
+  --muted: var(--color-text-muted);
+  --verdigris: var(--color-accent);
+  --brass: var(--color-accent-strong);
+  --danger: var(--color-danger);
+  --nav-h: var(--navigation-height);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --palette-ink: #f3f1ea;
+    --palette-panel: #ffffff;
+    --palette-line: #d5d2c6;
+    --palette-bone: #14232a;
+    --palette-muted: #5a6d73;
+    --palette-verdigris: #1f7a68;
+    --palette-brass: #9a6b12;
+    --palette-danger: #b3412f;
+    --color-on-accent: #ffffff;
+    color-scheme: light;
+  }
+}
