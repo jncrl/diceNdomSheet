@@ -1,5 +1,6 @@
 <script lang="ts">
   import { registerSW } from 'virtual:pwa-register';
+  import Browse from './lib/Browse.svelte';
   import DataCard from './lib/DataCard.svelte';
   import { data, loadData, updateAvailable, runSync } from './lib/data.svelte';
 
@@ -12,12 +13,14 @@
   ];
 
   // Tab lives in the URL hash so the Android back button steps through screens.
-  const fromHash = (): Tab => {
-    const h = location.hash.slice(1);
-    return tabs.some((t) => t.id === h) ? (h as Tab) : 'browse';
+  // Hash looks like `tab` or `tab/rest`. Browse uses the rest to open an entry.
+  const parseHash = () => {
+    const [first, ...rest] = location.hash.slice(1).split('/');
+    return { tab: (tabs.some((t) => t.id === first) ? first : 'browse') as Tab, route: rest.join('/') };
   };
 
-  let tab = $state<Tab>(fromHash());
+  let tab = $state<Tab>(parseHash().tab);
+  let route = $state(parseHash().route);
   let online = $state(navigator.onLine);
   let offlineReady = $state(false);
   let updateReady = $state(false);
@@ -37,7 +40,11 @@
   void loadData();
 
   $effect(() => {
-    const onHash = () => (tab = fromHash());
+    const onHash = () => {
+      const h = parseHash();
+      tab = h.tab;
+      route = h.route;
+    };
     const onOnline = () => (online = true);
     const onOffline = () => (online = false);
     const onInstallPrompt = (e: Event) => {
@@ -94,7 +101,7 @@
 
   <main>
     {#if tab === 'browse'}
-      <p class="empty">Spells, species, classes and feats will appear here once book data is downloaded. Start in Settings.</p>
+      <Browse {route} />
     {:else if tab === 'characters'}
       <p class="empty">No characters yet.</p>
     {:else}

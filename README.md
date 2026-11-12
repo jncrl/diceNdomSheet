@@ -59,10 +59,44 @@ Known gaps, deliberately left for M2:
 - [ ] Airplane mode, reopen the app: version and counts are still there.
 - [ ] Enter a bad URL, tap Sync: a readable error appears and the old data stays.
 
+## Milestone 2: search, filters, detail
+
+Browse tab. Search covers names and descriptions (typo tolerant, prefix matching, names that start
+with your words rank first). Categories: Spells, Classes, Species, Backgrounds, Feats, Items, Rules,
+Options, Features, Everything. Edition toggle: Both / 2014 / 2024. Filters: source (with book names),
+and for spells level, school and class. Results show 50 at a time.
+
+Opening an entry shows a stat block for its type, the full text with tables, lists and boxes, and
+tappable cross-links (a spell mentioned in a feat opens that spell). Classes and subclasses list their
+features by level in expandable sections, and classes list their subclasses. Each opened entry is a
+history step, so the Android back button returns to your results with search and filters intact.
+
+**One-time refresh:** if you synced under M1, open Settings and tap **Sync now** once. The search
+index and spell class lists are built during sync, so the data version is unchanged and no update
+banner appears.
+
+Known gaps:
+- Class progression tables (proficiency bonus, slots per level) are not shown yet.
+- Backgrounds and species show their book text, not a structured choice list. That comes with M3.
+- Art, fluff (lore) and generic magic variants are not included.
+
+### M2 acceptance test (phone)
+- [ ] Settings > Sync now once. Then Browse shows spells with a result count.
+- [ ] Search "fireball": Fireball appears for both 2014 and 2024. "firebal" still finds it.
+- [ ] Search "regain hit points" finds spells by description.
+- [ ] Spells, Both, Filters: Level 3, School Evocation, Class Wizard narrows the list.
+- [ ] Open a spell: stat line (casting time, range, components, duration) and text read correctly.
+- [ ] Tap a linked spell or condition inside an entry: it opens. Back returns to the previous entry.
+- [ ] Back to results keeps your search text and filters.
+- [ ] Classes > Wizard (2024): features by level expand, subclasses are listed.
+- [ ] Airplane mode: search and open entries still work.
+
 ### Dev scripts
 ```
 npx tsx scripts/test-pipeline.ts   # live download + resolve + edition report
 npx tsx scripts/test-db.ts         # same, plus save/read through Dexie (fake IndexedDB)
+npx tsx scripts/test-search.ts     # tag parser + search ranking and filters on live data
+npx tsx scripts/test-render.ts     # server-renders every entity, reports unsupported entry types
 ```
 
 ## Roadmap

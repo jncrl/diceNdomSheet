@@ -1,5 +1,6 @@
 import { makeEditionResolver, type Edition } from './edition';
-import { identityKey, resolveGroup, type Obj, type ResolveReport } from './resolve';
+import { entityId, resolveGroup, type Obj, type ResolveReport } from './resolve';
+import { buildSearch, type EntityMeta } from './search';
 
 export const DEFAULT_MIRROR = 'https://raw.githubusercontent.com/5etools-mirror-3/5etools-src/main/';
 
@@ -10,6 +11,8 @@ export interface Entity {
   source: string;
   edition: Edition;
   level?: number;
+  school?: string; // spells: single-letter school code
+  classes?: string[]; // spells: classes that can learn it
   json: Obj;
 }
 
@@ -112,14 +115,23 @@ async function pool<T>(items: T[], size: number, worker: (item: T) => Promise<vo
 export async function fetchAndBuild(
   baseUrl: string,
   onProgress: (p: Progress) => void = () => {}
-): Promise<{ version: string; entities: Entity[]; report: SyncReport }> {
+): Promise<{
+  version: string;
+  entities: Entity[];
+  report: SyncReport;
+  list: EntityMeta[];
+  indexJson: string;
+  sourceNames: Record<string, string>;
+}> {
   const base = normalizeBase(baseUrl);
   const version = await fetchRemoteVersion(base);
 
-  const [books, spellIndex, classIndex] = await Promise.all([
+  const [books, spellIndex, classIndex, classLookup] = await Promise.all([
     fetchJson(base, 'data/books.json'),
     fetchJson(base, 'data/spells/index.json'),
-    fetchJson(base, 'data/class/index.json')
+    fetchJson(base, 'data/class/index.json'),
+    // Which classes get which spells. Nice to have, so a failure here is not fatal.
+    fetchJson(base, 'data/generated/gendata-spell-source-lookup.json').catch(() => null)
   ]);
 
   const files: FileSpec[] = [
@@ -181,12 +193,19 @@ export async function fetchAndBuild(
         report.skipped++;
         continue;
       }
-      const id = `${type}|${identityKey(type, e)}`;
+      const id = entityId(type, e);
       if (byId.has(id)) {
         report.duplicates++;
         continue;
       }
       const edition = editionOf({ source: e.source, edition: e.edition });
+      let classes: string[] | undefined;
+      if (type === 'spell') {
+        // `class` lists the spell's own classes, `classVariant` the ones a later book added.
+        const rec = classLookup?.[e.source.toLowerCase()]?.[name.toLowerCase()];
+        const names = [rec?.class, rec?.classVariant].flatMap((g) => (g ? Object.values<any>(g).flatMap((c) => Object.keys(c)) : []));
+        if (names.length) classes = [...new Set(names)].sort();
+      }
       byId.set(id, {
         id,
         type,
@@ -194,6 +213,8 @@ export async function fetchAndBuild(
         source: e.source,
         edition,
         level: typeof e.level === 'number' ? e.level : undefined,
+        school: type === 'spell' ? e.school : undefined,
+        classes,
         json: e
       });
       const row = (report.counts[type] ??= { '2014': 0, '2024': 0 });
@@ -203,5 +224,10 @@ export async function fetchAndBuild(
 
   const entities = [...byId.values()];
   report.entities = entities.length;
-  return { version, entities, report };
+
+  onProgress({ done, total: files.length, label: 'Indexing' });
+  const { list, indexJson } = buildSearch(entities);
+  const sourceNames: Record<string, string> = {};
+  for (const b of books.book ?? []) if (b.source && b.name) sourceNames[b.source] = b.name;
+  return { version, entities, report, list, indexJson, sourceNames };
 }

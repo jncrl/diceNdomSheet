@@ -1,4 +1,5 @@
 import { db, getMeta, setMeta } from './db';
+import { resetCatalog } from './catalog';
 import { DEFAULT_MIRROR, SyncError, fetchAndBuild, fetchRemoteVersion, normalizeBase, type SyncReport } from './pipeline';
 
 export const data = $state({
@@ -47,7 +48,7 @@ export async function runSync() {
   data.error = null;
   try {
     await saveMirrorUrl(data.mirrorUrl);
-    const { version, entities, report } = await fetchAndBuild(data.mirrorUrl, (p) => Object.assign(data.progress, p));
+    const { version, entities, report, list, indexJson, sourceNames } = await fetchAndBuild(data.mirrorUrl, (p) => Object.assign(data.progress, p));
     data.progress.label = 'Saving';
     // One transaction: either the whole new dataset lands or the old one stays untouched.
     await db.transaction('rw', db.entities, db.meta, async () => {
@@ -56,9 +57,13 @@ export async function runSync() {
       await db.meta.bulkPut([
         { key: 'version', value: version },
         { key: 'syncedAt', value: Date.now() },
-        { key: 'report', value: report }
+        { key: 'report', value: report },
+        { key: 'entityList', value: list },
+        { key: 'searchIndex', value: indexJson },
+        { key: 'sourceNames', value: sourceNames }
       ]);
     });
+    resetCatalog();
     data.version = version;
     data.remoteVersion = version;
     data.syncedAt = Date.now();

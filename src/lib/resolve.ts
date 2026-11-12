@@ -133,6 +133,8 @@ function applyMods(target: Obj, mods: Obj, report: ResolveReport) {
   }
 }
 
+export const entityId = (type: string, o: Obj) => `${type}|${identityKey(type, o)}`;
+
 /** Resolves all `_copy` entries within one entity group (e.g. every `race`). */
 export function resolveGroup(type: string, entries: Obj[], report: ResolveReport): Obj[] {
   const byKey = new Map<string, Obj>();
