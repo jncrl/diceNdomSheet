@@ -1,0 +1,41 @@
+name: Validate development branch
+
+on:
+  push:
+    branches:
+      - chatgpt/m3-development
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Svelte and TypeScript checks
+        run: npm run check
+
+      - name: Production build
+        run: npm run build
+        env:
+          BASE_PATH: /${{ github.event.repository.name }}/
