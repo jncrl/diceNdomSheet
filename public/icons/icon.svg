@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+<rect width="1024" height="1024" rx="180" fill="#101b1f"/>
+<g transform="translate(512 532)">
+<path d="M0-174L-215-125V133L0 174Z" fill="#e9e4d6"/>
+<path d="M0-174L215-125V133L0 174Z" fill="#e9e4d6"/>
+<path d="M0-174V174" stroke="#101b1f" stroke-width="14"/>
+<path d="M-176-78L-30-66M-176-8L-30 4M-176 62L-30 74M176-78L30-66M176-8L30 4M176 62L30 74" stroke="#5fb3a1" stroke-width="16" stroke-linecap="round"/>
+<path d="M0-262L60-202L0-142L-60-202Z" fill="#d9a441"/>
+</g></svg>
