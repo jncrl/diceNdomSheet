@@ -42,6 +42,13 @@ await test('newCharacter produces a valid character with defaults', () => {
   assert.equal(model.totalLevel(c), 0);
 });
 
+await test('characterSummary describes ruleset and level', () => {
+  const c = model.newCharacter({ name: 'Gus', ruleset: '2014' });
+  assert.equal(model.characterSummary(c), '2014 rules · Not built yet');
+  c.choices.classes = [{ class: 'class|cleric|phb', level: 2 }];
+  assert.equal(model.characterSummary(c), '2014 rules · Level 2');
+});
+
 await test('create, get and list (most recently updated first)', async () => {
   const a = await service.createCharacter({ name: 'Aldo', ruleset: '2014', now: new Date('2026-01-01T00:00:00Z') });
   const b = await service.createCharacter({ name: 'Brin', ruleset: '2024', now: new Date('2026-01-02T00:00:00Z') });

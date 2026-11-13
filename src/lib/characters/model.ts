@@ -90,6 +90,11 @@ export function newCharacter({ name, ruleset, id, now = new Date() }: NewCharact
   };
 }
 
+export function characterSummary(c: Character): string {
+  const level = totalLevel(c);
+  return `${c.details.ruleset} rules · ${level > 0 ? `Level ${level}` : 'Not built yet'}`;
+}
+
 export const totalLevel = (c: Character) => c.choices.classes.reduce((sum, k) => sum + k.level, 0);
 
 const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
