@@ -54,7 +54,7 @@
   {#if tab === 'browse'}
     <Browse {route} />
   {:else if tab === 'characters'}
-    <Characters />
+    <Characters {route} />
   {:else}
     <Settings />
   {/if}

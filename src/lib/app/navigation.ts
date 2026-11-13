@@ -17,6 +17,6 @@ export function parseHash(hash: string = location.hash): { tab: Tab; route: stri
   return { tab, route: rest.join('/') };
 }
 
-export const navigate = (tab: Tab) => {
-  location.hash = tab;
+export const navigate = (tab: Tab, route = '') => {
+  location.hash = route ? `${tab}/${route}` : tab;
 };

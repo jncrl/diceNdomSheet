@@ -25,6 +25,7 @@ old.close();
 const { db } = await import('../src/lib/db');
 const model = await import('../src/lib/characters/model');
 const service = await import('../src/lib/characters/service');
+const species = await import('../src/lib/characters/species');
 const { countCharacters } = await import('../src/lib/characters/repository');
 
 await test('upgrading a v1 database keeps book data and meta', async () => {
@@ -78,6 +79,52 @@ await test('update rejects invalid data and leaves the stored character unchange
 
 await test('create rejects an empty name', async () => {
   await assert.rejects(service.createCharacter({ name: '   ', ruleset: '2024' }), service.CharacterError);
+});
+
+const meta = (id: string, type: string, name: string, source: string, edition: '2014' | '2024') => ({ id, type, name, source, edition });
+const catalog = [
+  meta('race|elf|phb', 'race', 'Elf', 'PHB', '2014'),
+  meta('race|aarakocra|eepc', 'race', 'Aarakocra', 'EEPC', '2014'),
+  meta('race|human|phb', 'race', 'Human', 'PHB', '2014'),
+  meta('subrace|high|phb|elf|phb', 'subrace', 'High', 'PHB', '2014'),
+  meta('subrace|drow|phb|elf|phb', 'subrace', 'Drow', 'PHB', '2014'),
+  meta('subrace|drow|mtf|elf|phb', 'subrace', 'Drow', 'MTF', '2014'),
+  meta('race|elf|xphb', 'race', 'Elf', 'XPHB', '2024'),
+  meta('race|dwarf|wow', 'race', 'Dwarf', 'WoW', '2024')
+];
+
+await test('speciesOptions filters by ruleset and lists core books first', () => {
+  assert.deepEqual(species.speciesOptions(catalog, '2014').map((m) => m.id), ['race|elf|phb', 'race|human|phb', 'race|aarakocra|eepc']);
+  assert.deepEqual(species.speciesOptions(catalog, '2024').map((m) => m.id), ['race|elf|xphb', 'race|dwarf|wow']);
+});
+
+await test('subrace ids map to their parent species', () => {
+  assert.equal(species.baseSpeciesId('subrace|drow|phb|elf|phb'), 'race|elf|phb');
+  assert.equal(species.baseSpeciesId('race|elf|phb'), null);
+  assert.deepEqual(species.subspeciesOptions(catalog, 'race|elf|phb').map((m) => m.id), ['subrace|drow|mtf|elf|phb', 'subrace|drow|phb|elf|phb', 'subrace|high|phb|elf|phb']);
+  assert.deepEqual(species.subspeciesOptions(catalog, 'race|elf|xphb'), []);
+});
+
+await test('chooseSpecies saves species and subrace, and changing species clears the subrace', async () => {
+  const c = await service.createCharacter({ name: 'Hana', ruleset: '2014' });
+  const a = await service.chooseSpecies(c.id, 'race|elf|phb', 'subrace|high|phb|elf|phb');
+  assert.equal(a.choices.species, 'race|elf|phb');
+  assert.equal(a.choices.subspecies, 'subrace|high|phb|elf|phb');
+  const b = await service.chooseSpecies(c.id, 'race|human|phb');
+  assert.equal(b.choices.species, 'race|human|phb');
+  assert.equal(b.choices.subspecies, undefined);
+  assert.equal((await service.getById(c.id))?.choices.subspecies, undefined);
+  const cleared = await service.chooseSpecies(c.id);
+  assert.equal(cleared.choices.species, undefined);
+});
+
+await test('a subrace from a different species is rejected and nothing is saved', async () => {
+  const c = await service.createCharacter({ name: 'Ivo', ruleset: '2014' });
+  await assert.rejects(service.chooseSpecies(c.id, 'race|human|phb', 'subrace|high|phb|elf|phb'), service.CharacterError);
+  assert.equal((await service.getById(c.id))?.choices.species, undefined);
+  const bare = model.newCharacter({ name: 'Jun', ruleset: '2014' });
+  bare.choices.subspecies = 'subrace|high|phb|elf|phb';
+  assert.ok(model.validateCharacter(bare).length > 0);
 });
 
 await test('remove deletes only that character', async () => {

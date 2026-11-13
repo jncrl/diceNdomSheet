@@ -1,4 +1,5 @@
 import type { Edition } from '../edition';
+import { isSubspeciesOf } from './species';
 
 // Character domain model. Pure data and rules: no Svelte, no database, no styling.
 // Persistence lives in repository.ts, orchestration in service.ts.
@@ -50,6 +51,7 @@ export interface Character {
   /** Selections reference book data by entity id rather than copying it. */
   choices: {
     species?: EntityRef;
+    subspecies?: EntityRef; // 2014 subrace; must belong to `species`
     background?: EntityRef;
     classes: ClassLevel[];
     abilityScores: AbilityScores;
@@ -125,8 +127,11 @@ export function validateCharacter(value: unknown): string[] {
   const c = value.choices;
   if (!isObject(c)) bad('choices must be an object');
   else {
-    for (const key of ['species', 'background'] as const) {
+    for (const key of ['species', 'subspecies', 'background'] as const) {
       if (c[key] !== undefined && typeof c[key] !== 'string') bad(`choices.${key} must be an entity id`);
+    }
+    if (typeof c.subspecies === 'string' && (typeof c.species !== 'string' || !isSubspeciesOf(c.subspecies, c.species))) {
+      bad('choices.subspecies must belong to the chosen species');
     }
     if (!Array.isArray(c.classes)) bad('choices.classes must be an array');
     else

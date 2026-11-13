@@ -27,6 +27,15 @@ export async function updateCharacter(id: string, patch: CharacterPatch, now = n
   return repo.saveCharacter(next);
 }
 
+/** Sets the species (and optional 2014 subrace). Changing species clears any earlier subrace. */
+export async function chooseSpecies(id: string, species?: string, subspecies?: string): Promise<Character> {
+  const current = await repo.getCharacter(id);
+  if (!current) throw new CharacterError(`Character ${id} not found`);
+  const { species: _species, subspecies: _subspecies, ...rest } = current.choices;
+  const choices = { ...rest, ...(species ? { species } : {}), ...(species && subspecies ? { subspecies } : {}) };
+  return updateCharacter(id, { choices });
+}
+
 export const removeCharacter = (id: string) => repo.deleteCharacter(id);
 export const listAll = repo.listCharacters;
 export const getById = repo.getCharacter;

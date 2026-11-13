@@ -1,11 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { navigate } from './app/navigation';
+  import CharacterEditor from './CharacterEditor.svelte';
   import { characterSummary } from './characters/model';
   import { addCharacter, deleteCharacter, loadRoster, roster } from './characters/store.svelte';
   import Button from './ui/Button.svelte';
   import Card from './ui/Card.svelte';
   import Input from './ui/Input.svelte';
   import Segmented from './ui/Segmented.svelte';
+
+  let { route = '' }: { route?: string } = $props();
 
   const rulesets = [
     { value: '2024', label: '2024 rules' },
@@ -28,14 +32,20 @@
   async function create() {
     if (!name.trim() || busy) return;
     busy = true;
-    const ok = await addCharacter({ name, ruleset });
+    const created = await addCharacter({ name, ruleset });
     busy = false;
-    if (ok) creating = false;
+    if (created) {
+      creating = false;
+      navigate('characters', created.id);
+    }
   }
 
   const updated = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 </script>
 
+{#if route}
+  {#key route}<CharacterEditor id={route} />{/key}
+{:else}
 {#if roster.error}<p class="error" role="alert">{roster.error}</p>{/if}
 
 {#if creating}
@@ -70,11 +80,15 @@
           <Button variant="ghost" onclick={() => (confirmingId = null)}>Keep</Button>
         </div>
       {:else}
-        <Button variant="ghost" aria-label={`Delete ${character.details.name}`} onclick={() => (confirmingId = character.id)}>Delete</Button>
+        <div class="actions">
+          <Button onclick={() => navigate('characters', character.id)} aria-label={`Open ${character.details.name}`}>Open</Button>
+          <Button variant="ghost" aria-label={`Delete ${character.details.name}`} onclick={() => (confirmingId = character.id)}>Delete</Button>
+        </div>
       {/if}
     </li>
   {/each}
 </ul>
+{/if}
 
 <style>
   form { display: grid; gap: var(--space-4); }

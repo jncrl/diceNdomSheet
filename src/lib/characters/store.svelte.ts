@@ -23,14 +23,34 @@ export async function loadRoster() {
   }
 }
 
-export async function addCharacter(input: NewCharacterInput): Promise<boolean> {
+export async function addCharacter(input: NewCharacterInput): Promise<Character | null> {
   try {
-    await service.createCharacter(input);
+    const created = await service.createCharacter(input);
     await loadRoster();
-    return true;
+    return created;
   } catch (e) {
     roster.error = `Could not create character: ${message(e)}`;
-    return false;
+    return null;
+  }
+}
+
+export async function loadCharacter(id: string): Promise<Character | undefined> {
+  try {
+    return await service.getById(id);
+  } catch (e) {
+    roster.error = `Could not load character: ${message(e)}`;
+    return undefined;
+  }
+}
+
+export async function setSpecies(id: string, species?: string, subspecies?: string): Promise<Character | null> {
+  try {
+    const updated = await service.chooseSpecies(id, species, subspecies);
+    await loadRoster();
+    return updated;
+  } catch (e) {
+    roster.error = `Could not save species: ${message(e)}`;
+    return null;
   }
 }
 
