@@ -10,7 +10,7 @@ export const ABILITIES: Record<string, string> = {
   str: 'Strength', dex: 'Dexterity', con: 'Constitution', int: 'Intelligence', wis: 'Wisdom', cha: 'Charisma'
 };
 
-const SIZES: Record<string, string> = { T: 'Tiny', S: 'Small', M: 'Medium', L: 'Large', H: 'Huge', G: 'Gargantuan', V: 'Varies' };
+export const SIZES: Record<string, string> = { T: 'Tiny', S: 'Small', M: 'Medium', L: 'Large', H: 'Huge', G: 'Gargantuan', V: 'Varies' };
 
 export const TYPE_LABELS: Record<string, string> = {
   spell: 'Spell', class: 'Class', subclass: 'Subclass', race: 'Species', subrace: 'Subrace', background: 'Background',
