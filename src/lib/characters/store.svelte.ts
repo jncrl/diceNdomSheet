@@ -63,6 +63,17 @@ export async function deleteCharacter(id: string) {
   }
 }
 
+export async function setBackground(id: string, background?: Choice): Promise<Character | null> {
+  try {
+    const updated = await service.chooseBackground(id, background);
+    await loadRoster();
+    return updated;
+  } catch (e) {
+    roster.error = `Could not save background: ${message(e)}`;
+    return null;
+  }
+}
+
 // Sheet edits can arrive faster than a save completes. Running them one after another keeps the
 // last edit as the last write.
 let queue: Promise<unknown> = Promise.resolve();

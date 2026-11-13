@@ -89,6 +89,54 @@ test('2024 style data: creature type, feat, flexible language choice', () => {
   assert.equal(rows['Feat'], 'Skilled');
 });
 
+// Shapes copied from the real Player's Handbook (2014) and 2024 Player's Handbook Acolytes.
+const background = (e: any) => ({ ...e, type: 'background' });
+const acolyte14 = background(entity('background|acolyte|phb', 'Acolyte', 'PHB', '2014', {
+  skillProficiencies: [{ insight: true, religion: true }], languageProficiencies: [{ anyStandard: 2 }],
+  startingEquipment: [
+    { _: [{ item: 'holy symbol|phb', displayName: 'holy symbol' }, { special: 'sticks of incense', quantity: 5 }, 'common clothes|phb', { item: 'pouch|phb', containsValue: 1500 }] },
+    { a: [{ item: 'book|phb', displayName: 'prayer book' }], b: [{ special: 'prayer wheel' }] }
+  ],
+  entries: [{ type: 'list', items: [] }, trait('Feature: Shelter of the Faithful'), trait('Suggested Characteristics')]
+}));
+const acolyte24 = background(entity('background|acolyte|xphb', 'Acolyte', 'XPHB', '2024', {
+  skillProficiencies: [{ insight: true, religion: true }], toolProficiencies: [{ "calligrapher's supplies": true }],
+  ability: [{ choose: { weighted: { from: ['int', 'wis', 'cha'], weights: [2, 1] } } }, { choose: { weighted: { from: ['int', 'wis', 'cha'], weights: [1, 1, 1] } } }],
+  feats: [{ 'magic initiate; cleric|xphb': true }],
+  startingEquipment: [{ A: [{ item: 'book|xphb', displayName: 'Book (Prayers)' }, { item: 'parchment|xphb', quantity: 10 }, { value: 800 }], B: [{ value: 5000 }] }],
+  entries: [{ type: 'list', items: [] }]
+}));
+
+test('backgrounds use their own fact rows, in order', () => {
+  const c = buildComparison([acolyte14, acolyte24]);
+  assert.deepEqual(c.facts.map((r) => r.label), ['Ability scores', 'Feat', 'Skills', 'Tools', 'Languages', 'Equipment']);
+  const rows = Object.fromEntries(c.facts.map((r) => [r.label, r]));
+  assert.deepEqual(rows['Ability scores'].values, ['\u2014', '+2, +1 to Intelligence/Wisdom/Charisma or +1, +1, +1 to Intelligence/Wisdom/Charisma']);
+  assert.deepEqual(rows['Feat'].values, ['\u2014', 'Magic Initiate; Cleric']);
+  assert.equal(rows['Skills'].differs, false);
+  assert.deepEqual(rows['Languages'].values, ['2 of your choice', '\u2014']);
+  assert.deepEqual(rows['Tools'].values, ['\u2014', "Calligrapher's Supplies"]);
+});
+
+test('starting equipment lists fixed items then lettered either/or packages', () => {
+  const eq = buildComparison([acolyte14, acolyte24]).facts.find((r) => r.label === 'Equipment')!;
+  assert.equal(eq.values[0], 'holy symbol, 5 sticks of incense, common clothes, pouch; (A) prayer book or (B) prayer wheel');
+  assert.equal(eq.values[1], '(A) Book (Prayers), 10 parchment, 8 gp or (B) 50 gp');
+});
+
+test('background traits keep the feature and skip flavour tables', () => {
+  const t = buildComparison([acolyte14, acolyte24]).traits;
+  assert.deepEqual(t.map((x) => x.name), ['Feature: Shelter of the Faithful']);
+  assert.deepEqual(t[0].present, [true, false]);
+});
+
+test('any-choice proficiencies read naturally', () => {
+  const crim = entity('background|criminal|phb', 'Criminal', 'PHB', '2014', { toolProficiencies: [{ anyGamingSet: 1, "thieves' tools": true }] });
+  const folk = entity('background|folk hero|phb', 'Folk Hero', 'PHB', '2014', { toolProficiencies: [{ anyArtisansTool: 1, 'vehicles (land)': true }] });
+  const row = buildComparison([crim, folk].map(background)).facts.find((r) => r.label === 'Tools')!;
+  assert.deepEqual(row.values, ["1 gaming set of your choice, Thieves' Tools", '1 artisans tool of your choice, Vehicles (Land)']);
+});
+
 console.log(results.join('\n'));
 console.log(failed ? `\n${failed} test(s) failed` : `\nall ${results.length} tests passed`);
 process.exit(failed ? 1 : 0);

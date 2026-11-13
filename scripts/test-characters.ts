@@ -26,6 +26,7 @@ const { db } = await import('../src/lib/db');
 const model = await import('../src/lib/characters/model');
 const service = await import('../src/lib/characters/service');
 const species = await import('../src/lib/characters/species');
+const options = await import('../src/lib/characters/options');
 const { SKILLS } = await import('../src/lib/characters/skills');
 const { countCharacters } = await import('../src/lib/characters/repository');
 
@@ -167,6 +168,32 @@ await test('chooseSpecies saves species and subrace, and changing species clears
   assert.equal(b.choices.subspecies, undefined);
   const cleared = await service.chooseSpecies(c.id);
   assert.equal(cleared.choices.species, undefined);
+});
+
+await test('pickableOptions works for backgrounds: ruleset filter, core books first', () => {
+  const bg = [
+    meta('background|acolyte|phb', 'background', 'Acolyte', 'PHB', '2014'),
+    meta('background|archaeologist|toa', 'background', 'Archaeologist', 'ToA', '2014'),
+    meta('background|sage|phb', 'background', 'Sage', 'PHB', '2014'),
+    meta('background|acolyte|xphb', 'background', 'Acolyte', 'XPHB', '2024'),
+    meta('race|elf|phb', 'race', 'Elf', 'PHB', '2014')
+  ];
+  assert.deepEqual(options.pickableOptions(bg, 'background', '2014').map((m) => m.id), ['background|acolyte|phb', 'background|sage|phb', 'background|archaeologist|toa']);
+  assert.deepEqual(options.pickableOptions(bg, 'background', '2024').map((m) => m.id), ['background|acolyte|xphb']);
+});
+
+await test('chooseBackground saves, replaces and clears, and keeps other choices', async () => {
+  const c = await service.createCharacter({ name: 'Nia', ruleset: '2014' });
+  await service.chooseSpecies(c.id, elf);
+  const a = await service.chooseBackground(c.id, { name: 'Sage', ref: 'background|sage|phb' });
+  assert.deepEqual(a.choices.background, { name: 'Sage', ref: 'background|sage|phb' });
+  assert.deepEqual(a.choices.species, elf);
+  const b = await service.chooseBackground(c.id, { name: 'Lighthouse Keeper' });
+  assert.deepEqual((await service.getById(c.id))?.choices.background, { name: 'Lighthouse Keeper' });
+  assert.equal(b.choices.background?.ref, undefined);
+  const cleared = await service.chooseBackground(c.id);
+  assert.equal('background' in cleared.choices, false);
+  assert.deepEqual(cleared.choices.species, elf);
 });
 
 await test('a subrace from a different species is rejected by validation', () => {

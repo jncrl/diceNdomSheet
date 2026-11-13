@@ -36,6 +36,14 @@ export async function chooseSpecies(id: string, species?: Choice, subspecies?: C
   return updateCharacter(id, { choices });
 }
 
+/** Sets or clears the background. */
+export async function chooseBackground(id: string, background?: Choice): Promise<Character> {
+  const current = await repo.getCharacter(id);
+  if (!current) throw new CharacterError(`Character ${id} not found`);
+  const { background: _background, ...rest } = current.choices;
+  return updateCharacter(id, { choices: { ...rest, ...(background ? { background } : {}) } });
+}
+
 export const removeCharacter = (id: string) => repo.deleteCharacter(id);
 export const listAll = repo.listCharacters;
 export const getById = repo.getCharacter;

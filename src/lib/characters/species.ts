@@ -1,5 +1,6 @@
 import type { Edition } from '../edition';
 import type { EntityMeta } from '../search';
+import { byName, pickableOptions } from './options';
 
 // Species rules over the book-data catalog. Pure functions: no database, no Svelte.
 //
@@ -7,13 +8,8 @@ import type { EntityMeta } from '../search';
 // A subrace id ends with its parent species: `subrace|drow|phb|elf|phb` belongs to `race|elf|phb`.
 // 2024 species have no subrace entries; their lineages live inside the species text.
 
-const CORE_SOURCES = new Set(['PHB', 'XPHB']);
-const core = (m: EntityMeta) => (CORE_SOURCES.has(m.source) ? 1 : 0);
-const byName = (a: EntityMeta, b: EntityMeta) => a.name.localeCompare(b.name) || a.source.localeCompare(b.source);
-
 /** Species for a ruleset, core books first, then alphabetical. */
-export const speciesOptions = (list: EntityMeta[], ruleset: Edition): EntityMeta[] =>
-  list.filter((m) => m.type === 'race' && m.edition === ruleset).sort((a, b) => core(b) - core(a) || byName(a, b));
+export const speciesOptions = (list: EntityMeta[], ruleset: Edition): EntityMeta[] => pickableOptions(list, 'race', ruleset);
 
 /** Id of the species a subrace belongs to, or null if the id is not a subrace id. */
 export function baseSpeciesId(subspeciesId: string): string | null {

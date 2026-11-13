@@ -64,6 +64,7 @@
       bind:value={() => draft.choices.background?.name ?? '', (v) => (draft.choices.background = withName(draft.choices.background, v))}
       onchange={save}
     />
+    <div><Button onclick={() => chooseFromBook('background')}>Choose background from book</Button></div>
   </div>
 </Card>
 

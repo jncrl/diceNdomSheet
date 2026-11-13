@@ -2,8 +2,9 @@
   import { onMount } from 'svelte';
   import { navigate } from './app/navigation';
   import type { Character, Choice } from './characters/model';
-  import { loadCharacter, setSpecies } from './characters/store.svelte';
+  import { loadCharacter, setBackground, setSpecies } from './characters/store.svelte';
   import CharacterSheet from './CharacterSheet.svelte';
+  import EntryPicker from './EntryPicker.svelte';
   import SpeciesStep from './SpeciesStep.svelte';
   import Button from './ui/Button.svelte';
 
@@ -28,6 +29,12 @@
     if (updated) character = updated;
   }
 
+  async function chooseBackground(background?: Choice) {
+    if (!character) return;
+    const updated = await setBackground(character.id, background);
+    if (updated) character = updated;
+  }
+
   const back = () => (picker ? navigate('characters', id) : navigate('characters'));
 </script>
 
@@ -43,6 +50,17 @@
   <h2>{character.details.name}</h2>
   {#if picker === 'species'}
     <SpeciesStep {character} onchoose={chooseSpecies} />
+    <div class="done"><Button variant="primary" onclick={back}>Done</Button></div>
+  {:else if picker === 'background'}
+    <EntryPicker
+      type="background"
+      noun="background"
+      plural="backgrounds"
+      example="e.g. sage"
+      ruleset={character.details.ruleset}
+      selected={character.choices.background}
+      onchoose={chooseBackground}
+    />
     <div class="done"><Button variant="primary" onclick={back}>Done</Button></div>
   {:else}
     <CharacterSheet {character} />

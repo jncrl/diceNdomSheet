@@ -77,7 +77,7 @@ banner appears.
 
 Known gaps:
 - Class progression tables (proficiency bonus, slots per level) are not shown yet.
-- Backgrounds and species show their book text, not a structured choice list. That comes with M3.
+- Browse shows species and backgrounds as book text. The character pickers (M3) read their structured facts.
 - Art, fluff (lore) and generic magic variants are not included.
 
 ### M2 acceptance test (phone)
@@ -91,14 +91,88 @@ Known gaps:
 - [ ] Classes > Wizard (2024): features by level expand, subclasses are listed.
 - [ ] Airplane mode: search and open entries still work.
 
-### Dev scripts
+## Milestone 3: characters (in progress)
+
+Characters tab. The sheet is manual first: you can fill in everything by hand, so homebrew and
+house rules always work, and the book pickers are optional shortcuts that fill the same fields.
+Nothing is calculated.
+
+**What exists**
+- **Characters list:** create (name and ruleset, 2024 or 2014), open, delete (two taps). Each row shows
+  species, classes and ruleset. Characters live in IndexedDB on the device and are never touched by a
+  book-data sync.
+- **Character sheet:** identity (name, species, variant, background), classes (any number of rows with
+  subclass and level), the six ability scores, the 18 skill proficiencies, feats, equipment (name,
+  quantity, notes) and free-text notes. It saves automatically after every change.
+- **Pickers from the books:** "Choose species from book" and "Choose background from book" open a search
+  list filtered to the character's ruleset, core books first. Species with 2014 variants (subraces) get
+  a variant list. Show details displays the full book text.
+- **Compare:** entries with the same name in several books (a Bugbear from Volo's, Eberron and Monsters
+  of the Multiverse; Acolyte in 2014 and 2024) show "N versions". Compare versions, or tick any 2 to 4
+  entries with Compare, to see them side by side: creature type, size, speed, ability scores, skills,
+  tools, languages, feat and equipment, with differing rows highlighted, then a trait table where
+  tapping a trait shows its text in each version. "Use this" picks a version.
+
+**How a selection is stored.** Species, variant, background, class, subclass and feats are saved as a
+name plus an optional book id (`{ name, ref? }`). The name is always what the sheet shows, so it works
+offline and for homebrew. The id links back to the book. Editing the name of a book pick turns it into a
+custom entry. Records carry their own `schemaVersion` (currently 2); older records are upgraded when
+read, and the same upgrade will apply to old backups. Blank rows are dropped when saving.
+
+**Still to do in M3**
+- Class and subclass pickers, and a guided ability score step.
+- A guided "walk me through creation" flow on top of the pickers.
+- 2024 species lineages (for example which Elf lineage) are not selectable yet, only visible in details.
+- Backup and restore: export one character or all as versioned JSON, import with validation, duplicate
+  id handling. The backup format will be versioned separately from the database schema.
+
+### M3 acceptance test (phone)
+- [ ] Characters > New character: a 2014 character opens its sheet.
+- [ ] Edit the name, a class level and an ability score, reload: the changes stuck.
+- [ ] Choose species from book: search "bugbear", see "3 versions", Compare versions, tap a trait to read it,
+      Use this. The sheet shows the species. Editing the species text marks it custom in the picker.
+- [ ] Choose background from book: pick Acolyte, then Compare versions (2014 vs 2024).
+- [ ] Add a class row with no name, reload: it quietly disappears, no error.
+- [ ] A 2024 character lists 2024 species and backgrounds only.
+- [ ] Airplane mode: the list, the sheet and the pickers still work.
+- [ ] Sync now in Settings: your characters are still there.
+
+## Architecture
+
+`docs/UI-ARCHITECTURE.md` is the reference. In short, five concerns stay separate:
+- **Design tokens:** `src/styles/tokens.css`, semantic names only. Restyling is a one-file change.
+- **Shared UI primitives:** `src/lib/ui` (Button, Card, inputs, lists, shell and navigation). No business logic.
+- **Feature screens:** `src/lib/*.svelte` (Browse, Characters, CharacterSheet, EntryPicker, Compare, Settings).
+- **Domain logic:** `src/lib/characters/` (model, validation, migration, species rules, service) and
+  `src/lib/compare.ts`. Pure TypeScript, no Svelte or database imports.
+- **Persistence:** `src/lib/db.ts` (Dexie schema) and `src/lib/characters/repository.ts`.
+
+The page skeleton lives in `src/lib/ui/AppShell.svelte`, the screen list and routing in
+`src/lib/app/navigation.ts`, and app-wide runtime state (install, offline, updates) in
+`src/lib/app/app-state.svelte.ts`.
+
+## Branches, checks and previews
+
+- `main` is production. The `Deploy to GitHub Pages` workflow publishes it.
+- `chatgpt/m3-development` carries M3 work. It is not merged to `main` until M3 is complete and tested.
+  Nothing merges without explicit approval.
+- The `Validate` workflow (`.github/workflows/validate.yml`) runs type checks, the offline tests and a
+  production build on the development branch and on pull requests to `main`.
+- A separate Cloudflare Pages project builds the development branch for phone testing. Cloudflare serves
+  from the site root, so it builds without `BASE_PATH`. The preview has its own storage, so sync book data
+  once there.
+
+### Tests and dev scripts
 ```
-npx tsx scripts/test-pipeline.ts   # live download + resolve + edition report
-npx tsx scripts/test-db.ts         # same, plus save/read through Dexie (fake IndexedDB)
-npx tsx scripts/test-search.ts     # tag parser + search ranking and filters on live data
-npx tsx scripts/test-render.ts     # server-renders every entity, reports unsupported entry types
+npm test                            # offline: character model/storage/migration and comparison logic (also runs in CI)
+npx tsx scripts/test-pipeline.ts    # live download + resolve + edition report
+npx tsx scripts/test-db.ts          # same, plus save/read through Dexie (fake IndexedDB)
+npx tsx scripts/test-search.ts      # tag parser + search ranking and filters on live data
+npx tsx scripts/test-render.ts      # server-renders every entity, reports unsupported entry types
 ```
+The last four need network access to the mirror, so they are not part of CI.
 
 ## Roadmap
-M1 mirror sync and cache | M2 search and detail | M3 characters and creation |
-M4 pinning and spell slots | M5 play-time basics and level-up | M6 avatar builder | M7 hardening
+M0 scaffold and PWA (done) | M1 mirror sync and cache (done) | M2 search and detail (done) |
+M3 characters and creation (in progress) | M4 pinning and spell slots | M5 play-time basics and level-up |
+M6 avatar builder | M7 hardening
