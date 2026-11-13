@@ -35,6 +35,9 @@ jobs:
       - name: Svelte and TypeScript checks
         run: npm run check
 
+      - name: Offline tests
+        run: npm test
+
       - name: Production build
         run: npm run build
         env:
