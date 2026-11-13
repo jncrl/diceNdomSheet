@@ -30,8 +30,7 @@
   }
 </script>
 
-<Card class="card">
-  <h2>Book data</h2>
+<Card title="Book data">
   <label for="mirror">Mirror URL</label>
   <input id="mirror" type="url" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false" bind:value={draft} disabled={busy} />
   <p class="hint">Base URL of a 5etools repo. It covers both the 2014 and 2024 rules.</p>
@@ -93,6 +92,7 @@
   dl { margin: var(--space-4) 0 0; display: grid; gap: 0.15rem; }
   dt { color: var(--color-text-muted); font-size: var(--font-size-sm); margin-top: 0.6rem; }
   dd { margin: 0; }
+  input:disabled { opacity: 0.5; }
   table { width: 100%; border-collapse: collapse; margin-top: var(--space-4); font-variant-numeric: tabular-nums; }
   th, td { padding: 0.3rem 0; text-align: right; border-bottom: 1px solid var(--color-border); font-weight: 400; }
   th:first-child { text-align: left; color: var(--color-text-muted); }

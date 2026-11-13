@@ -140,16 +140,16 @@
   h3 { font-size: 1.15rem; margin: 1.5rem 0 0.5rem; }
   .sub { margin: 0.1rem 0 0; font-style: italic; }
   .sub2 { margin: 0.5rem 0; }
-  .meta { margin: 0.2rem 0 0.9rem; color: var(--muted); font-size: 0.875rem; }
-  .pill { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.5rem; margin-right: 0.35rem; }
-  .muted { color: var(--muted); }
-  .warn { color: var(--brass); }
-  dl { display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 1rem; margin: 0 0 1rem; padding: 0.75rem 0; border-block: 1px solid var(--line); }
-  dt { color: var(--muted); }
+  .meta { margin: 0.2rem 0 0.9rem; color: var(--color-text-muted); font-size: 0.875rem; }
+  .pill { border: 1px solid var(--color-border); border-radius: 999px; padding: 0 0.5rem; margin-right: 0.35rem; }
+  .muted { color: var(--color-text-muted); }
+  .warn { color: var(--color-accent-strong); }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 0.2rem 1rem; margin: 0 0 1rem; padding: 0.75rem 0; border-block: 1px solid var(--color-border); }
+  dt { color: var(--color-text-muted); }
   dd { margin: 0; }
-  details { border-bottom: 1px solid var(--line); padding: 0.4rem 0; }
+  details { border-bottom: 1px solid var(--color-border); padding: 0.4rem 0; }
   summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; gap: 0.6rem; }
-  .lvl { color: var(--muted); font-weight: 400; min-width: 4.5rem; }
+  .lvl { color: var(--color-text-muted); font-weight: 400; min-width: 4.5rem; }
   .links { padding-left: 1.2rem; }
-  .links a { color: var(--verdigris); }
+  .links a { color: var(--color-accent); }
 </style>

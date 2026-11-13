@@ -1,9 +1,8 @@
 /*
  * Design tokens
  *
- * Keep visual decisions here rather than in feature logic. Existing component
- * styles still use the legacy aliases at the bottom of this file; retain them
- * until those components are migrated to semantic tokens.
+ * Keep visual decisions here rather than in feature logic. Components use the
+ * semantic tokens only; palette primitives are referenced from this file alone.
  */
 
 :root {
@@ -58,22 +57,9 @@
   --navigation-height: 64px;
   --content-width: 40rem;
   --content-width-wide: 60rem;
+  --card-max-width: 34rem;
 
   color-scheme: dark;
-
-  /*
-   * Backwards-compatible aliases. New components should use semantic tokens.
-   * These aliases can be removed only after all existing consumers migrate.
-   */
-  --ink: var(--color-background);
-  --panel: var(--color-surface);
-  --line: var(--color-border);
-  --bone: var(--color-text);
-  --muted: var(--color-text-muted);
-  --verdigris: var(--color-accent);
-  --brass: var(--color-accent-strong);
-  --danger: var(--color-danger);
-  --nav-h: var(--navigation-height);
 }
 
 @media (prefers-color-scheme: light) {

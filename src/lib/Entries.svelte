@@ -110,7 +110,7 @@
 <style>
   p { margin: 0.5rem 0; }
   .inline :global(p) { display: inline; margin: 0; }
-  .muted { color: var(--muted); font-size: 0.85rem; }
+  .muted { color: var(--color-text-muted); font-size: 0.85rem; }
   .center { text-align: center; }
   .blk { margin: 0.25rem 0; }
   .h { font-weight: 700; margin: 0.9rem 0 0.15rem; }
@@ -118,17 +118,17 @@
   ul { margin: 0.5rem 0; padding-left: 1.25rem; }
   ul.plain { list-style: none; padding-left: 0; }
   li { margin: 0.2rem 0; }
-  .inset { margin: 0.75rem 0; padding: 0.25rem 0.9rem; border-left: 3px solid var(--brass); background: color-mix(in srgb, var(--panel) 70%, transparent); }
+  .inset { margin: 0.75rem 0; padding: 0.25rem 0.9rem; border-left: 3px solid var(--color-accent-strong); background: color-mix(in srgb, var(--color-surface) 70%, transparent); }
   .inset .name { font-weight: 700; margin-top: 0.4rem; }
-  blockquote { margin: 0.75rem 0; padding-left: 0.9rem; border-left: 3px solid var(--line); color: var(--muted); }
+  blockquote { margin: 0.75rem 0; padding-left: 0.9rem; border-left: 3px solid var(--color-border); color: var(--color-text-muted); }
   blockquote footer { text-align: right; font-size: 0.875rem; }
   .tbl { margin: 0.75rem 0; }
   .cap { font-weight: 700; margin-bottom: 0.25rem; }
   .scroll { overflow-x: auto; }
   table { border-collapse: collapse; min-width: 100%; font-size: 0.9rem; }
-  th, td { text-align: left; padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; }
+  th, td { text-align: left; padding: 0.3rem 0.6rem 0.3rem 0; border-bottom: 1px solid var(--color-border); vertical-align: top; }
+  th { color: var(--color-text-muted); font-weight: 600; }
   td :global(p) { margin: 0; }
-  hr { border: 0; border-top: 1px solid var(--line); margin: 1rem 0; }
-  .ref { color: var(--verdigris); text-decoration: underline; text-underline-offset: 2px; }
+  hr { border: 0; border-top: 1px solid var(--color-border); margin: 1rem 0; }
+  .ref { color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px; }
 </style>

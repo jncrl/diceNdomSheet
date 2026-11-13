@@ -22,11 +22,21 @@ The application must be redesignable without rewriting its features, rules engin
 - A theme change must be possible by changing token values or a theme selector, without changing feature logic.
 - Avoid a wholesale migration of existing M2 components just to satisfy the new structure. Migrate them incrementally when touched, preserving current behaviour.
 
-## Compatibility and migration
+## Layout structure
 
-Existing components still consume legacy variables such as `--ink`, `--panel`, `--line`, `--bone`, `--muted`, `--verdigris`, `--brass`, `--danger` and `--nav-h`. These remain as aliases in `tokens.css` during migration.
+Where to change what:
 
-Do not remove or rename these aliases until a repository-wide search confirms that no component uses them. New code should use semantic variables such as `--color-background`, `--color-surface`, `--color-text`, `--color-accent`, `--space-4` and `--radius-md`.
+- **Page skeleton** (header, banners, content area, bottom nav): `src/lib/ui/AppShell.svelte`. Moving the nav or header means editing this file.
+- **Navigation items and routing**: `src/lib/app/navigation.ts` holds the screen list and hash parsing. Add or reorder screens there; `NavBar.svelte` only renders the list it is given.
+- **App runtime state** (connectivity, install prompt, service-worker updates): `src/lib/app/app-state.svelte.ts`.
+- **Screens**: `Browse`, `Characters`, `Settings` under `src/lib`. `App.svelte` only composes the shell with the active screen.
+- **Shared primitives**: `Button`, `Card` (optional `title`), `Banner`, `ScreenHeader`, `NavBar` and `AppShell` under `src/lib/ui`. Add new primitives (inputs, chips, dialogs, list rows) alongside their first real use.
+
+## Migration status
+
+All components now use semantic tokens. The legacy aliases (`--ink`, `--panel`, `--line`, `--bone`, `--muted`, `--verdigris`, `--brass`, `--danger`, `--nav-h`) were removed after a repository-wide search found no remaining use. Do not reintroduce them. Use semantic variables such as `--color-background`, `--color-surface`, `--color-text`, `--color-accent`, `--space-4` and `--radius-md`.
+
+Browse, Detail and Entries still use their own local markup for inputs, chips and buttons. Convert them to shared primitives when they are next touched.
 
 ## Acceptance checks
 

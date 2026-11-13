@@ -138,28 +138,28 @@
 {/if}
 
 <style>
-  .top { position: sticky; top: 0; z-index: 2; background: var(--ink); padding-bottom: 0.5rem; margin: 0 -1.25rem; padding-inline: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; }
-  input[type='search'] { width: 100%; min-height: 48px; padding: 0 0.9rem; background: var(--panel); color: var(--bone); border: 1px solid var(--line); border-radius: 0.5rem; font: inherit; }
+  .top { position: sticky; top: 0; z-index: 2; background: var(--color-background); padding-bottom: 0.5rem; margin: 0 -1.25rem; padding-inline: 1.25rem; display: flex; flex-direction: column; gap: 0.6rem; }
+  input[type='search'] { width: 100%; min-height: 48px; padding: 0 0.9rem; background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 0.5rem; font: inherit; }
   .chips { display: flex; gap: 0.4rem; overflow-x: auto; padding-bottom: 0.25rem; scrollbar-width: none; }
   .chips button { flex: none; min-height: 40px; border-radius: 999px; }
-  .on { background: var(--verdigris) !important; border-color: var(--verdigris) !important; color: #0b1417 !important; font-weight: 600; }
+  .on { background: var(--color-accent) !important; border-color: var(--color-accent) !important; color: var(--color-on-accent) !important; font-weight: 600; }
   .row { display: flex; gap: 0.6rem; align-items: center; justify-content: space-between; }
   .seg { display: flex; }
   .seg button { border-radius: 0; min-height: 40px; }
   .seg button:first-child { border-radius: 0.5rem 0 0 0.5rem; }
   .seg button:last-child { border-radius: 0 0.5rem 0.5rem 0; }
   .filt { min-height: 40px; }
-  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; padding: 0.75rem; background: var(--panel); border: 1px solid var(--line); border-radius: 0.5rem; }
-  .filters label { display: flex; flex-direction: column; gap: 0.2rem; color: var(--muted); font-size: 0.8rem; min-width: 0; }
-  select { min-height: 44px; background: var(--ink); color: var(--bone); border: 1px solid var(--line); border-radius: 0.4rem; font: inherit; width: 100%; }
-  .count { color: var(--muted); font-size: 0.85rem; margin: 0.5rem 0 0.25rem; }
+  .filters { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; padding: 0.75rem; background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 0.5rem; }
+  .filters label { display: flex; flex-direction: column; gap: 0.2rem; color: var(--color-text-muted); font-size: 0.8rem; min-width: 0; }
+  select { min-height: 44px; background: var(--color-background); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 0.4rem; font: inherit; width: 100%; }
+  .count { color: var(--color-text-muted); font-size: 0.85rem; margin: 0.5rem 0 0.25rem; }
   .results { list-style: none; padding: 0; margin: 0; }
-  .results a { display: flex; flex-direction: column; min-height: 56px; justify-content: center; padding: 0.4rem 0; border-bottom: 1px solid var(--line); color: inherit; text-decoration: none; }
+  .results a { display: flex; flex-direction: column; min-height: 56px; justify-content: center; padding: 0.4rem 0; border-bottom: 1px solid var(--color-border); color: inherit; text-decoration: none; }
   .name { font-weight: 600; }
-  .sub { color: var(--muted); font-size: 0.85rem; }
-  .ed { border: 1px solid var(--line); border-radius: 999px; padding: 0 0.4rem; margin: 0 0.25rem; font-size: 0.75rem; }
+  .sub { color: var(--color-text-muted); font-size: 0.85rem; }
+  .ed { border: 1px solid var(--color-border); border-radius: 999px; padding: 0 0.4rem; margin: 0 0.25rem; font-size: 0.75rem; }
   .more { width: 100%; margin-top: 0.75rem; }
   .back { margin-bottom: 0.75rem; align-self: flex-start; }
-  .empty { color: var(--muted); max-width: 34rem; }
-  .empty a { color: var(--verdigris); }
+  .empty { color: var(--color-text-muted); max-width: 34rem; }
+  .empty a { color: var(--color-accent); }
 </style>
