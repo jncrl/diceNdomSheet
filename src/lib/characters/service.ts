@@ -1,4 +1,4 @@
-import { newCharacter, validateCharacter, type Character, type NewCharacterInput } from './model';
+import { newCharacter, normalizeCharacter, validateCharacter, type Character, type Choice, type NewCharacterInput } from './model';
 import * as repo from './repository';
 
 // Application operations on characters. UI components call these, never the repository.
@@ -18,17 +18,17 @@ export async function createCharacter(input: NewCharacterInput): Promise<Charact
   return repo.saveCharacter(character);
 }
 
-/** Replaces whole sections of a character and bumps `updatedAt`. */
+/** Replaces whole sections of a character, tidies it (see normalizeCharacter) and bumps `updatedAt`. */
 export async function updateCharacter(id: string, patch: CharacterPatch, now = new Date()): Promise<Character> {
   const current = await repo.getCharacter(id);
   if (!current) throw new CharacterError(`Character ${id} not found`);
-  const next: Character = { ...current, ...patch, id: current.id, createdAt: current.createdAt, updatedAt: now.toISOString() };
+  const next = normalizeCharacter({ ...current, ...patch, id: current.id, createdAt: current.createdAt, updatedAt: now.toISOString() });
   assertValid(next);
   return repo.saveCharacter(next);
 }
 
 /** Sets the species (and optional 2014 subrace). Changing species clears any earlier subrace. */
-export async function chooseSpecies(id: string, species?: string, subspecies?: string): Promise<Character> {
+export async function chooseSpecies(id: string, species?: Choice, subspecies?: Choice): Promise<Character> {
   const current = await repo.getCharacter(id);
   if (!current) throw new CharacterError(`Character ${id} not found`);
   const { species: _species, subspecies: _subspecies, ...rest } = current.choices;

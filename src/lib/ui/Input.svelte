@@ -5,6 +5,7 @@
     placeholder = '',
     maxlength,
     autocomplete = 'off',
+    onchange,
     class: className = ''
   }: {
     label: string;
@@ -12,13 +13,14 @@
     placeholder?: string;
     maxlength?: number;
     autocomplete?: AutoFill;
+    onchange?: () => void;
     class?: string;
   } = $props();
 </script>
 
 <label class={className}>
   <span>{label}</span>
-  <input type="text" bind:value {placeholder} {maxlength} {autocomplete} />
+  <input type="text" bind:value {placeholder} {maxlength} {autocomplete} {onchange} />
 </label>
 
 <style>

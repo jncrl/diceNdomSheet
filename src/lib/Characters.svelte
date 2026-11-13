@@ -43,10 +43,11 @@
   const updated = (iso: string) => new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 </script>
 
-{#if route}
-  {#key route}<CharacterEditor id={route} />{/key}
-{:else}
 {#if roster.error}<p class="error" role="alert">{roster.error}</p>{/if}
+
+{#if route}
+  {#key route}<CharacterEditor {route} />{/key}
+{:else}
 
 {#if creating}
   <Card title="New character">

@@ -1,12 +1,15 @@
 import { db } from '../db';
-import type { Character } from './model';
+import { migrateCharacter, type Character } from './model';
 
 // Persistence only. No validation or rules here; see service.ts.
+// Reads upgrade older records to the current shape (they are rewritten on the next save).
+
+const upgrade = (raw: Character | undefined) => migrateCharacter(raw) as Character | undefined;
 
 /** Most recently updated first. */
-export const listCharacters = () => db.characters.orderBy('updatedAt').reverse().toArray();
+export const listCharacters = async () => (await db.characters.orderBy('updatedAt').reverse().toArray()).map((c) => upgrade(c) as Character);
 
-export const getCharacter = (id: string) => db.characters.get(id);
+export const getCharacter = async (id: string) => upgrade(await db.characters.get(id));
 
 export const saveCharacter = async (character: Character) => {
   await db.characters.put(character);

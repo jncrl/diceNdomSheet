@@ -3,7 +3,7 @@
   import { navigate } from './app/navigation';
   import { ensureCatalog, type Catalog } from './catalog';
   import { speciesOptions, subspeciesOptions } from './characters/species';
-  import type { Character } from './characters/model';
+  import type { Character, Choice } from './characters/model';
   import Detail from './Detail.svelte';
   import { runSearch } from './search';
   import Button from './ui/Button.svelte';
@@ -11,7 +11,7 @@
   import Input from './ui/Input.svelte';
   import OptionList from './ui/OptionList.svelte';
 
-  let { character, onchoose }: { character: Character; onchoose: (species?: string, subspecies?: string) => void } = $props();
+  let { character, onchoose }: { character: Character; onchoose: (species?: Choice, subspecies?: Choice) => void } = $props();
 
   let catalog = $state<Catalog | null | undefined>(undefined); // undefined while loading, null if no book data yet
   let query = $state('');
@@ -24,6 +24,7 @@
   const ruleset = $derived(character.details.ruleset);
   const species = $derived(character.choices.species);
   const subspecies = $derived(character.choices.subspecies);
+  const entry = (id: string): Choice => ({ name: catalog?.byId.get(id)?.name ?? id, ref: id });
   const filter = $derived({ types: ['race'], edition: ruleset, source: '', level: '', school: '', className: '' });
 
   const results = $derived(
@@ -31,13 +32,12 @@
   );
   const speciesList = $derived(results.map((m) => ({ value: m.id, label: m.name, hint: m.source })));
   const subspeciesList = $derived(
-    catalog && species ? subspeciesOptions(catalog.list, species).map((m) => ({ value: m.id, label: m.name, hint: m.source })) : []
+    catalog && species?.ref ? subspeciesOptions(catalog.list, species.ref).map((m) => ({ value: m.id, label: m.name, hint: m.source })) : []
   );
-  const chosenName = $derived(species ? (catalog?.byId.get(species)?.name ?? species) : '');
 
   function pickSpecies(id: string) {
     showDetails = false;
-    onchoose(id, undefined);
+    onchoose(entry(id), undefined);
   }
 </script>
 
@@ -50,14 +50,14 @@
   </Card>
 {:else}
   {#if species}
-    <Card title={chosenName}>
-      <p class="muted">{ruleset} rules{subspecies ? ` · ${catalog.byId.get(subspecies)?.name ?? ''}` : ''}</p>
+    <Card title={species.name}>
+      <p class="muted">{ruleset} rules{subspecies ? ` · ${subspecies.name}` : ''}{species.ref ? '' : ' · custom entry'}</p>
       <div class="actions">
-        <Button onclick={() => (showDetails = !showDetails)}>{showDetails ? 'Hide details' : 'Show details'}</Button>
+        {#if species.ref}<Button onclick={() => (showDetails = !showDetails)}>{showDetails ? 'Hide details' : 'Show details'}</Button>{/if}
         <Button variant="ghost" onclick={() => onchoose(undefined, undefined)}>Clear</Button>
       </div>
     </Card>
-    {#if showDetails}<Detail id={species} />{/if}
+    {#if showDetails && species.ref}<Detail id={species.ref} />{/if}
   {/if}
 
   {#if subspeciesList.length}
@@ -65,15 +65,15 @@
     <OptionList
       label="Variant"
       options={[{ value: '', label: 'None (base species)' }, ...subspeciesList]}
-      value={subspecies ?? ''}
-      onselect={(id) => onchoose(species, id || undefined)}
+      value={subspecies?.ref ?? ''}
+      onselect={(id) => onchoose(species, id ? entry(id) : undefined)}
     />
   {/if}
 
   <h3>{species ? 'Change species' : 'Choose a species'}</h3>
   <Input label="Search species" bind:value={query} placeholder="e.g. elf" />
   {#if speciesList.length}
-    <OptionList label="Species" options={speciesList} value={species} onselect={pickSpecies} />
+    <OptionList label="Species" options={speciesList} value={species?.ref} onselect={pickSpecies} />
   {:else}
     <p class="muted">No {ruleset} species match.</p>
   {/if}

@@ -1,4 +1,4 @@
-import type { Character, NewCharacterInput } from './model';
+import type { Character, Choice, NewCharacterInput } from './model';
 import * as service from './service';
 
 // Reactive view of the saved characters for the UI. Operations go through the
@@ -43,7 +43,7 @@ export async function loadCharacter(id: string): Promise<Character | undefined> 
   }
 }
 
-export async function setSpecies(id: string, species?: string, subspecies?: string): Promise<Character | null> {
+export async function setSpecies(id: string, species?: Choice, subspecies?: Choice): Promise<Character | null> {
   try {
     const updated = await service.chooseSpecies(id, species, subspecies);
     await loadRoster();
@@ -61,4 +61,24 @@ export async function deleteCharacter(id: string) {
   } catch (e) {
     roster.error = `Could not delete character: ${message(e)}`;
   }
+}
+
+// Sheet edits can arrive faster than a save completes. Running them one after another keeps the
+// last edit as the last write.
+let queue: Promise<unknown> = Promise.resolve();
+
+export function saveSections(id: string, patch: service.CharacterPatch): Promise<Character | null> {
+  const run = async () => {
+    try {
+      const updated = await service.updateCharacter(id, patch);
+      roster.error = null;
+      return updated;
+    } catch (e) {
+      roster.error = `Could not save changes: ${message(e)}`;
+      return null;
+    }
+  };
+  const result = queue.then(run);
+  queue = result;
+  return result;
 }

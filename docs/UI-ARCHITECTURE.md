@@ -29,8 +29,8 @@ Where to change what:
 - **Page skeleton** (header, banners, content area, bottom nav): `src/lib/ui/AppShell.svelte`. Moving the nav or header means editing this file.
 - **Navigation items and routing**: `src/lib/app/navigation.ts` holds the screen list and hash parsing. Add or reorder screens there; `NavBar.svelte` only renders the list it is given.
 - **App runtime state** (connectivity, install prompt, service-worker updates): `src/lib/app/app-state.svelte.ts`.
-- **Screens**: `Browse`, `Characters`, `Settings` under `src/lib`. `App.svelte` only composes the shell with the active screen.
-- **Shared primitives**: `Button`, `Card` (optional `title`), `Banner`, `ScreenHeader`, `NavBar` and `AppShell` under `src/lib/ui`. Add new primitives (inputs, chips, dialogs, list rows) alongside their first real use.
+- **Screens**: `Browse`, `Characters` (list, then `CharacterEditor` which shows `CharacterSheet` or a pick-from-book screen such as `SpeciesStep`) and `Settings` under `src/lib`. `App.svelte` only composes the shell with the active screen.
+- **Shared primitives** under `src/lib/ui`: `Button`, `Card` (optional `title`), `Banner`, `ScreenHeader`, `NavBar`, `AppShell`, and the form controls `Input`, `NumberField`, `TextArea`, `Checkbox`, `Segmented`, `OptionList` and `EditableList`. Add new primitives alongside their first real use.
 
 ## Migration status
 
