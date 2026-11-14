@@ -2,9 +2,9 @@ import { ABILITIES, SIZES } from './format';
 import type { Entity } from './pipeline';
 import type { Obj } from './resolve';
 
-// Side-by-side comparison of book entries (species and backgrounds). Pure functions: no database, no Svelte.
+// Side-by-side comparison of book entries (species, backgrounds, classes and subclasses). Pure functions: no database, no Svelte.
 
-const NONE = '\u2014';
+const NONE = '—';
 
 export interface ComparisonColumn {
   id: string;
@@ -24,7 +24,8 @@ export interface TraitRow {
   key: string;
   name: string;
   present: boolean[]; // one per column
-  entries: (unknown | undefined)[]; // the book entry for each column that has the trait
+  cells: string[]; // what each column's cell shows: a tick, or the levels a class feature arrives at
+  entries: (unknown | undefined)[]; // the book entry for each column that has the trait (if the book gives one)
   differs: boolean;
 }
 
@@ -139,6 +140,30 @@ function equipmentText(groups: unknown): string {
     .join('; ');
 }
 
+/** Strips 5etools tags: `{@item dagger|phb|daggers}` becomes `daggers`. */
+const plainTags = (s: string) => s.replace(/\{@\w+ ([^|}]*)(?:\|([^|}]*))?(?:\|([^|}]*))?[^}]*\}/g, (_, a: string, _b: string, c: string) => c || a);
+
+const armorWeaponText = (v: unknown) =>
+  Array.isArray(v) ? v.map((x) => (typeof x === 'string' ? (x.includes('{@') ? plainTags(x) : cap(x)) : '')).filter(Boolean).join(', ') : '';
+
+const toolsOfClass = (v: unknown) =>
+  Array.isArray(v) ? v.map((x) => (typeof x === 'string' ? plainTags(x) : proficiencyText([x]))).filter(Boolean).join(', ') : '';
+
+const CASTER: Record<string, string> = { full: 'full caster', '1/2': 'half caster', '1/3': 'third caster', pact: 'pact magic', artificer: 'half caster' };
+const castingText = (j: Obj) =>
+  typeof j.spellcastingAbility === 'string' ? `${abilityName(j.spellcastingAbility)}${j.casterProgression ? ` (${CASTER[j.casterProgression as string] ?? j.casterProgression})` : ''}` : '';
+
+const primaryText = (v: unknown) =>
+  Array.isArray(v) ? v.map((o) => (isObj(o) ? Object.keys(o).filter((k) => o[k]).map(abilityName).join(' & ') : '')).filter(Boolean).join(' or ') : '';
+
+const multiclassText = (m: unknown) => {
+  const req = isObj(m) && isObj(m.requirements) ? m.requirements : null;
+  if (!req) return '';
+  const parts = (o: Obj) => Object.entries(o).filter(([k]) => ABILITIES[k]).map(([k, v]) => `${abilityName(k)} ${v}`);
+  // Inside an `or`, every score listed is an alternative (Fighter: Strength 13 or Dexterity 13).
+  return Array.isArray(req.or) ? req.or.filter(isObj).flatMap(parts).join(' or ') : parts(req).join(', ');
+};
+
 const FACT_LISTS: Record<string, [string, (j: Obj) => string][]> = {
   race: [
     ['Creature type', (j) => listText(j.creatureTypes)],
@@ -151,6 +176,23 @@ const FACT_LISTS: Record<string, [string, (j: Obj) => string][]> = {
     ['Languages', (j) => proficiencyText(j.languageProficiencies)],
     ['Resistances', (j) => listText(j.resist)],
     ['Feat', (j) => featText(j.feats)]
+  ],
+  class: [
+    ['Hit die', (j) => (isObj(j.hd) ? `d${j.hd.faces}` : '')],
+    ['Primary ability', (j) => primaryText(j.primaryAbility)],
+    ['Saving throws', (j) => (Array.isArray(j.proficiency) ? j.proficiency.map(abilityName).join(', ') : '')],
+    ['Skills', (j) => proficiencyText(isObj(j.startingProficiencies) ? j.startingProficiencies.skills : undefined)],
+    ['Armor', (j) => armorWeaponText(isObj(j.startingProficiencies) ? j.startingProficiencies.armor : undefined)],
+    ['Weapons', (j) => armorWeaponText(isObj(j.startingProficiencies) ? j.startingProficiencies.weapons : undefined)],
+    ['Tools', (j) => toolsOfClass(isObj(j.startingProficiencies) ? j.startingProficiencies.tools : undefined)],
+    ['Spellcasting', castingText],
+    ['Subclass', (j) => (typeof j.subclassTitle === 'string' ? j.subclassTitle : '')],
+    ['Multiclassing', (j) => multiclassText(j.multiclassing)],
+    ['Equipment', (j) => equipmentText(isObj(j.startingEquipment) ? j.startingEquipment.defaultData : undefined)]
+  ],
+  subclass: [
+    ['Class', (j) => (typeof j.className === 'string' ? j.className : '')],
+    ['Spellcasting', castingText]
   ],
   background: [
     ['Ability scores', (j) => abilityText(j.ability)],
@@ -171,11 +213,36 @@ const SKIPPED_TRAITS = new Set([
   'suggested characteristics', 'specialty'
 ]);
 
-const traitsOf = (e: Entity): { key: string; name: string; entry: unknown }[] =>
-  (Array.isArray(e.json.entries) ? e.json.entries : [])
+interface Trait { key: string; name: string; entry?: unknown; label: string }
+
+/**
+ * Classes and subclasses list their features by reference (`Name|Class|Source|Level`), not as text,
+ * so each feature is shown with the levels it arrives at. Everything else uses its named entries.
+ */
+function featureTraits(refs: unknown, levelAt: number): Trait[] {
+  const levels = new Map<string, { name: string; levels: number[] }>();
+  for (const ref of Array.isArray(refs) ? refs : []) {
+    const text = typeof ref === 'string' ? ref : isObj(ref) && typeof ref.classFeature === 'string' ? ref.classFeature : isObj(ref) && typeof ref.subclassFeature === 'string' ? ref.subclassFeature : '';
+    const parts = text.split('|');
+    const name = parts[0]?.trim();
+    const level = Number(parts[levelAt]);
+    if (!name || !Number.isFinite(level)) continue;
+    const key = name.toLowerCase();
+    const row = levels.get(key) ?? { name, levels: [] };
+    row.levels.push(level);
+    levels.set(key, row);
+  }
+  return [...levels].map(([key, { name, levels: at }]) => ({ key, name, label: `Level ${[...new Set(at)].sort((a, b) => a - b).join(', ')}` }));
+}
+
+const traitsOf = (e: Entity): Trait[] => {
+  if (e.type === 'class') return featureTraits(e.json.classFeatures, 3);
+  if (e.type === 'subclass') return featureTraits(e.json.subclassFeatures, 5);
+  return (Array.isArray(e.json.entries) ? e.json.entries : [])
     .filter((x: unknown): x is Obj => isObj(x) && typeof x.name === 'string')
-    .map((x: Obj) => ({ key: x.name.trim().toLowerCase(), name: x.name.trim(), entry: x }))
+    .map((x: Obj) => ({ key: x.name.trim().toLowerCase(), name: x.name.trim(), entry: x, label: '✓' }))
     .filter((t: { key: string }) => !SKIPPED_TRAITS.has(t.key));
+};
 
 export function buildComparison(entities: Entity[], sourceName: (source: string) => string = (s) => s): Comparison {
   const columns = entities.map((e) => ({ id: e.id, name: e.name, source: e.source, sourceName: sourceName(e.source), edition: e.edition }));
@@ -191,9 +258,11 @@ export function buildComparison(entities: Entity[], sourceName: (source: string)
   const order: { key: string; name: string }[] = [];
   for (const list of perColumn) for (const t of list) if (!order.some((o) => o.key === t.key)) order.push({ key: t.key, name: t.name });
   const traits: TraitRow[] = order.map(({ key, name }) => {
-    const entries = perColumn.map((list) => list.find((t) => t.key === key)?.entry);
-    const present = entries.map((x) => x !== undefined);
-    return { key, name, present, entries, differs: !present.every(Boolean) };
+    const found = perColumn.map((list) => list.find((t) => t.key === key));
+    const entries = found.map((t) => t?.entry);
+    const present = found.map((t) => t !== undefined);
+    const cells = found.map((t) => t?.label ?? NONE);
+    return { key, name, present, cells, entries, differs: new Set(cells).size > 1 };
   });
 
   return { columns, facts, traits };

@@ -1,4 +1,5 @@
 import type { Edition } from '../edition';
+import { isSubclassOf } from './classes';
 import { isSubspeciesOf } from './species';
 
 // Character domain model. Pure data and rules: no Svelte, no database, no styling.
@@ -148,7 +149,10 @@ export function normalizeCharacter(c: Character): Character {
     background: cleanChoice(c.choices.background),
     classes: c.choices.classes.flatMap((k) => {
       const cls = cleanChoice(k.class);
-      return cls ? [{ ...k, class: cls, subclass: cleanChoice(k.subclass) }] : [];
+      if (!cls) return [];
+      let subclass = cleanChoice(k.subclass);
+      if (subclass?.ref && !(cls.ref && isSubclassOf(subclass.ref, cls.ref))) subclass = { name: subclass.name };
+      return [{ ...k, class: cls, subclass }];
     }),
     feats: cleanChoices(c.choices.feats),
     spells: cleanChoices(c.choices.spells)
@@ -237,6 +241,9 @@ export function validateCharacter(value: unknown): string[] {
       c.classes.forEach((k, i) => {
         if (!isObject(k) || !isChoice(k.class) || !isInt(k.level, 1, 20)) bad(`choices.classes[${i}] needs a class name and a level from 1 to 20`);
         else if (k.subclass !== undefined && !isChoice(k.subclass)) bad(`choices.classes[${i}].subclass needs a name`);
+        else if (isObject(k.subclass) && typeof k.subclass.ref === 'string' && !(isObject(k.class) && typeof k.class.ref === 'string' && isSubclassOf(k.subclass.ref, k.class.ref))) {
+          bad(`choices.classes[${i}].subclass must belong to the chosen class`);
+        }
       });
     const scores = c.abilityScores;
     if (!isObject(scores)) bad('choices.abilityScores must be an object');

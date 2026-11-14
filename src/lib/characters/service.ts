@@ -1,4 +1,4 @@
-import { newCharacter, normalizeCharacter, validateCharacter, type Character, type Choice, type NewCharacterInput } from './model';
+import { newCharacter, normalizeCharacter, validateCharacter, type Character, type Choice, type ClassLevel, type NewCharacterInput } from './model';
 import * as repo from './repository';
 
 // Application operations on characters. UI components call these, never the repository.
@@ -42,6 +42,13 @@ export async function chooseBackground(id: string, background?: Choice): Promise
   if (!current) throw new CharacterError(`Character ${id} not found`);
   const { background: _background, ...rest } = current.choices;
   return updateCharacter(id, { choices: { ...rest, ...(background ? { background } : {}) } });
+}
+
+/** Replaces the class list (use applyClassChoice / applySubclassChoice to build it). */
+export async function setClasses(id: string, classes: ClassLevel[]): Promise<Character> {
+  const current = await repo.getCharacter(id);
+  if (!current) throw new CharacterError(`Character ${id} not found`);
+  return updateCharacter(id, { choices: { ...current.choices, classes } });
 }
 
 export const removeCharacter = (id: string) => repo.deleteCharacter(id);

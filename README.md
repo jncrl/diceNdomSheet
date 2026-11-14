@@ -104,14 +104,21 @@ Nothing is calculated.
 - **Character sheet:** identity (name, species, variant, background), classes (any number of rows with
   subclass and level), the six ability scores, the 18 skill proficiencies, feats, equipment (name,
   quantity, notes) and free-text notes. It saves automatically after every change.
-- **Pickers from the books:** "Choose species from book" and "Choose background from book" open a search
+- **Pickers from the books:** "Choose species from book", "Choose background from book" and, in the Classes
+  card, "Add class from book" (or "Choose class and subclass from book" on an existing row) open a search
   list filtered to the character's ruleset, core books first. Species with 2014 variants (subraces) get
-  a variant list. Show details displays the full book text.
+  a variant list, and a chosen class gets its subclass list. A 2024 class lists its own 2024 subclasses
+  first, then the 2014 ones written for it (marked 2014). Changing a row's class drops its subclass; the
+  level stays on the sheet. Show details displays the full book text.
 - **Compare:** entries with the same name in several books (a Bugbear from Volo's, Eberron and Monsters
   of the Multiverse; Acolyte in 2014 and 2024) show "N versions". Compare versions, or tick any 2 to 4
-  entries with Compare, to see them side by side: creature type, size, speed, ability scores, skills,
-  tools, languages, feat and equipment, with differing rows highlighted, then a trait table where
-  tapping a trait shows its text in each version. "Use this" picks a version.
+  entries with Compare, to see them side by side. Species compare creature type, size, speed, ability
+  scores, skills, tools, languages and feat; backgrounds compare ability scores, feat, skills, tools,
+  languages and equipment; classes compare hit die, primary ability, saving throws, skills, armor,
+  weapons, tools, spellcasting, subclass title, multiclassing and equipment. Differing rows are
+  highlighted. Below that is a trait table: species and backgrounds show a tick per version and tapping a
+  trait shows its text; classes list each feature with the levels it arrives at (Wizard 2014 against
+  2024, for example). "Use this" picks a version.
 
 **How a selection is stored.** Species, variant, background, class, subclass and feats are saved as a
 name plus an optional book id (`{ name, ref? }`). The name is always what the sheet shows, so it works
@@ -120,7 +127,7 @@ custom entry. Records carry their own `schemaVersion` (currently 2); older recor
 read, and the same upgrade will apply to old backups. Blank rows are dropped when saving.
 
 **Still to do in M3**
-- Class and subclass pickers, and a guided ability score step.
+- A guided ability score step (standard array, point buy, rolled).
 - A guided "walk me through creation" flow on top of the pickers.
 - 2024 species lineages (for example which Elf lineage) are not selectable yet, only visible in details.
 - Backup and restore: export one character or all as versioned JSON, import with validation, duplicate
@@ -133,7 +140,9 @@ read, and the same upgrade will apply to old backups. Blank rows are dropped whe
       Use this. The sheet shows the species. Editing the species text marks it custom in the picker.
 - [ ] Choose background from book: pick Acolyte, then Compare versions (2014 vs 2024).
 - [ ] Add a class row with no name, reload: it quietly disappears, no error.
-- [ ] A 2024 character lists 2024 species and backgrounds only.
+- [ ] Add class from book: pick Wizard, then a subclass, back to the sheet, set the level. Change the class and
+      confirm the subclass clears. Compare versions on Wizard (2014 against 2024) and read the feature levels.
+- [ ] A 2024 character lists 2024 species, backgrounds and classes only.
 - [ ] Airplane mode: the list, the sheet and the pickers still work.
 - [ ] Sync now in Settings: your characters are still there.
 

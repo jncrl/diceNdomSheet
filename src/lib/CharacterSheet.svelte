@@ -30,6 +30,9 @@
     navigate('characters', `${character.id}/${step}`);
   }
 
+  // Position of a sheet row among the rows that are saved (blank rows are dropped on save).
+  const savedClassIndex = (i: number) => draft.choices.classes.slice(0, i).filter((k) => k.class.name.trim() !== '').length;
+
   function toggleSkill(key: string, on: boolean) {
     const rest = draft.choices.skills.filter((k) => k !== key);
     draft.choices.skills = on ? [...rest, key] : rest;
@@ -69,6 +72,7 @@
 </Card>
 
 <Card title="Classes">
+  <div class="add"><Button onclick={() => chooseFromBook('class/new')}>Add class from book</Button></div>
   <EditableList
     items={draft.choices.classes}
     addLabel="Add class"
@@ -88,6 +92,9 @@
         onchange={save}
       />
       <NumberField label="Level" min={1} max={20} bind:value={draft.choices.classes[i].level} onchange={save} />
+      {#if draft.choices.classes[i].class.name.trim()}
+        <div><Button onclick={() => chooseFromBook(`class/${savedClassIndex(i)}`)}>Choose class and subclass from book</Button></div>
+      {/if}
     {/snippet}
   </EditableList>
 </Card>
@@ -145,4 +152,5 @@
   .abilities { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
   .status { margin: 0; min-height: 1.2em; color: var(--color-text-muted); font-size: var(--font-size-sm); }
   .muted { margin: 0; color: var(--color-text-muted); }
+  .add { margin-bottom: var(--space-3); }
 </style>

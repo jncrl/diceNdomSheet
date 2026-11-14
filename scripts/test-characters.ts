@@ -27,6 +27,7 @@ const model = await import('../src/lib/characters/model');
 const service = await import('../src/lib/characters/service');
 const species = await import('../src/lib/characters/species');
 const options = await import('../src/lib/characters/options');
+const classes = await import('../src/lib/characters/classes');
 const { SKILLS } = await import('../src/lib/characters/skills');
 const { countCharacters } = await import('../src/lib/characters/repository');
 
@@ -196,6 +197,63 @@ await test('chooseBackground saves, replaces and clears, and keeps other choices
   assert.deepEqual(cleared.choices.species, elf);
 });
 
+const classMeta = [
+  meta('class|wizard|phb', 'class', 'Wizard', 'PHB', '2014'),
+  meta('class|artificer|tce', 'class', 'Artificer', 'TCE', '2014'),
+  meta('class|wizard|xphb', 'class', 'Wizard', 'XPHB', '2024'),
+  meta('class|barbarian|xphb', 'class', 'Barbarian', 'XPHB', '2024'),
+  meta('subclass|school of evocation|phb|evocation|wizard|phb', 'subclass', 'School of Evocation', 'PHB', '2014'),
+  meta('subclass|school of abjuration|phb|abjuration|wizard|phb', 'subclass', 'School of Abjuration', 'PHB', '2014'),
+  meta('subclass|evoker|xphb|evoker|wizard|xphb', 'subclass', 'Evoker', 'XPHB', '2024'),
+  meta('subclass|school of evocation|phb|evocation|wizard|xphb', 'subclass', 'School of Evocation', 'PHB', '2014'),
+  meta('subclass|path of the berserker|xphb|berserker|barbarian|xphb', 'subclass', 'Path of the Berserker', 'XPHB', '2024')
+];
+
+await test('class and subclass options: ruleset filter, parent class, own ruleset first', () => {
+  assert.deepEqual(classes.classOptions(classMeta, '2014').map((m) => m.id), ['class|wizard|phb', 'class|artificer|tce']);
+  assert.deepEqual(classes.classOptions(classMeta, '2024').map((m) => m.id), ['class|barbarian|xphb', 'class|wizard|xphb']);
+  assert.equal(classes.baseClassId('subclass|school of evocation|phb|evocation|wizard|xphb'), 'class|wizard|xphb');
+  assert.equal(classes.baseClassId('class|wizard|phb'), null);
+  assert.deepEqual(classes.subclassOptions(classMeta, 'class|wizard|phb', '2014').map((m) => m.id), [
+    'subclass|school of abjuration|phb|abjuration|wizard|phb', 'subclass|school of evocation|phb|evocation|wizard|phb'
+  ]);
+  // a 2024 class lists its own subclasses first, then the 2014 ones written for it
+  assert.deepEqual(classes.subclassOptions(classMeta, 'class|wizard|xphb', '2024').map((m) => m.id), [
+    'subclass|evoker|xphb|evoker|wizard|xphb', 'subclass|school of evocation|phb|evocation|wizard|xphb'
+  ]);
+});
+
+await test('applyClassChoice adds, replaces (dropping a mismatched subclass), keeps level, and clears', () => {
+  const wiz = { name: 'Wizard', ref: 'class|wizard|phb' };
+  const evo = { name: 'School of Evocation', ref: 'subclass|school of evocation|phb|evocation|wizard|phb' };
+  const added = classes.applyClassChoice([], null, wiz);
+  assert.deepEqual(added, { classes: [{ class: wiz, level: 1 }], index: 0 });
+  assert.deepEqual(classes.applyClassChoice([], null, undefined), { classes: [], index: null });
+  const withSub = classes.applySubclassChoice([{ class: wiz, level: 5 }], 0, evo);
+  assert.deepEqual(withSub, [{ class: wiz, level: 5, subclass: evo }]);
+  const same = classes.applyClassChoice(withSub, 0, wiz);
+  assert.deepEqual(same.classes, withSub); // same class keeps its subclass
+  const other = classes.applyClassChoice(withSub, 0, { name: 'Artificer', ref: 'class|artificer|tce' });
+  assert.deepEqual(other.classes, [{ class: { name: 'Artificer', ref: 'class|artificer|tce' }, level: 5 }]);
+  assert.deepEqual(classes.applySubclassChoice(withSub, 0, undefined), [{ class: wiz, level: 5 }]);
+  assert.deepEqual(classes.applyClassChoice(withSub, 0, undefined), { classes: [], index: null });
+  assert.deepEqual(classes.applyClassChoice(withSub, 3, wiz).index, null);
+});
+
+await test('setClasses saves book and custom classes; a subclass from another class is unlinked', async () => {
+  const c = await service.createCharacter({ name: 'Oro', ruleset: '2014' });
+  const wiz = { name: 'Wizard', ref: 'class|wizard|phb' };
+  const evo = { name: 'School of Evocation', ref: 'subclass|school of evocation|phb|evocation|wizard|phb' };
+  const a = await service.setClasses(c.id, [{ class: wiz, subclass: evo, level: 3 }, { class: { name: 'Gloomstalker' }, level: 1 }]);
+  assert.deepEqual(a.choices.classes[0], { class: wiz, subclass: evo, level: 3 });
+  assert.equal(model.totalLevel(a), 4);
+  const wrong = await service.setClasses(c.id, [{ class: { name: 'Artificer', ref: 'class|artificer|tce' }, subclass: evo, level: 2 }]);
+  assert.deepEqual(wrong.choices.classes[0].subclass, { name: 'School of Evocation' });
+  const bare = model.newCharacter({ name: 'Pia', ruleset: '2014' });
+  bare.choices.classes = [{ class: { name: 'Artificer', ref: 'class|artificer|tce' }, subclass: evo, level: 1 }];
+  assert.ok(model.validateCharacter(bare).length > 0);
+});
+
 await test('a subrace from a different species is rejected by validation', () => {
   const c = model.newCharacter({ name: 'Ivo', ruleset: '2014' });
   c.choices.species = human;
@@ -225,7 +283,7 @@ await test('a version 1 record is upgraded when read', async () => {
       species: 'race|elf|phb',
       subspecies: 'subrace|high|phb|elf|phb',
       background: 'background|sage|phb',
-      classes: [{ class: 'class|wizard|phb', subclass: 'subclass|evocation|wizard|phb|evocation', level: 3 }],
+      classes: [{ class: 'class|wizard|phb', subclass: 'subclass|school of evocation|phb|evocation|wizard|phb', level: 3 }],
       abilityScores: { str: 8, dex: 14, con: 12, int: 16, wis: 10, cha: 10 },
       skills: [],
       feats: ['feat|alert|phb'],

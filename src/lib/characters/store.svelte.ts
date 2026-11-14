@@ -1,4 +1,4 @@
-import type { Character, Choice, NewCharacterInput } from './model';
+import type { Character, Choice, ClassLevel, NewCharacterInput } from './model';
 import * as service from './service';
 
 // Reactive view of the saved characters for the UI. Operations go through the
@@ -70,6 +70,17 @@ export async function setBackground(id: string, background?: Choice): Promise<Ch
     return updated;
   } catch (e) {
     roster.error = `Could not save background: ${message(e)}`;
+    return null;
+  }
+}
+
+export async function setClasses(id: string, classes: ClassLevel[]): Promise<Character | null> {
+  try {
+    const updated = await service.setClasses(id, classes);
+    await loadRoster();
+    return updated;
+  } catch (e) {
+    roster.error = `Could not save class: ${message(e)}`;
     return null;
   }
 }

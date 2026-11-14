@@ -65,13 +65,17 @@
       </tbody>
       {#if comparison.traits.length}
         <tbody>
-          <tr class="section"><th colspan={cols.length + 1}>Traits (tap one to read it)</th></tr>
+          <tr class="section"><th colspan={cols.length + 1}>Traits and features</th></tr>
           {#each comparison.traits as trait}
             <tr class:differs={trait.differs}>
               <th scope="row">
-                <button type="button" aria-expanded={open === trait.key} onclick={() => (open = open === trait.key ? null : trait.key)}>{trait.name}</button>
+                {#if trait.entries.some(Boolean)}
+                  <button type="button" aria-expanded={open === trait.key} onclick={() => (open = open === trait.key ? null : trait.key)}>{trait.name}</button>
+                {:else}
+                  {trait.name}
+                {/if}
               </th>
-              {#each trait.present as has}<td>{has ? '\u2713' : '\u2014'}</td>{/each}
+              {#each trait.cells as cell}<td>{cell}</td>{/each}
             </tr>
             {#if open === trait.key}
               <tr class="text">
